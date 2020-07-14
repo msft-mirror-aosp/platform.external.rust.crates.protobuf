@@ -1,62 +1,39 @@
 //! Lazily initialized data.
 //! Used in generated code.
 
-// Avoid deprecation warnings when compiling rust-protobuf
-#![allow(deprecated)]
-
-use std::mem;
+use std::cell::UnsafeCell;
 use std::sync;
 
-/// Lasily initialized data.
-#[deprecated(
-    since = "2.16",
-    note = "Please regenerate .rs files from .proto files to use newer APIs"
-)]
-pub struct Lazy<T> {
-    #[doc(hidden)]
-    pub lock: sync::Once,
-    #[doc(hidden)]
-    pub ptr: *const T,
+/// Lazily initialized data.
+pub struct LazyV2<T: Sync> {
+    lock: sync::Once,
+    ptr: UnsafeCell<*const T>,
 }
 
-impl<T> Lazy<T> {
+unsafe impl<T: Sync> Sync for LazyV2<T> {}
+
+impl<T: Sync> LazyV2<T> {
     /// Uninitialized `Lazy` object.
-    ///
-    /// The initializer is added in rust-protobuf 2.11, for compatibility with
-    /// previously generated code, existing fields are kept public.
-    pub const INIT: Lazy<T> = Lazy {
+    pub const INIT: LazyV2<T> = LazyV2 {
         lock: sync::Once::new(),
-        ptr: 0 as *const T,
+        ptr: UnsafeCell::new(0 as *const T),
     };
 
     /// Get lazy field value, initialize it with given function if not yet.
-    pub fn get<F>(&'static mut self, init: F) -> &'static T
+    pub fn get<F>(&'static self, init: F) -> &'static T
     where
         F: FnOnce() -> T,
     {
-        // ~ decouple the lifetimes of 'self' and 'self.lock' such we
-        // can initialize self.ptr in the call_once closure (note: we
-        // do have to initialize self.ptr in the closure to guarantee
-        // the ptr is valid for all calling threads at any point in
-        // time)
-        let lock: &sync::Once = unsafe { mem::transmute(&self.lock) };
-        lock.call_once(|| unsafe {
-            self.ptr = mem::transmute(Box::new(init()));
+        self.lock.call_once(|| unsafe {
+            *self.ptr.get() = Box::into_raw(Box::new(init()));
         });
-        unsafe { &*self.ptr }
+        unsafe { &**self.ptr.get() }
     }
 }
 
-/// Used to initialize `lock` field in `Lazy` struct.
-#[deprecated(
-    since = "2.11",
-    note = "Regenerate .proto files to use safer initializer"
-)]
-pub const ONCE_INIT: sync::Once = sync::Once::new();
-
 #[cfg(test)]
 mod test {
-    use super::Lazy;
+    use super::LazyV2;
     use std::sync::atomic::AtomicIsize;
     use std::sync::atomic::Ordering;
     use std::sync::Arc;
@@ -69,7 +46,7 @@ mod test {
         const N_ITERS_IN_THREAD: usize = 32;
         const N_ITERS: usize = 16;
 
-        static mut LAZY: Lazy<String> = Lazy::INIT;
+        static mut LAZY: LazyV2<String> = LazyV2::INIT;
         static CALL_COUNT: AtomicIsize = AtomicIsize::new(0);
 
         let value = "Hello, world!".to_owned();
@@ -77,7 +54,7 @@ mod test {
         for _ in 0..N_ITERS {
             // Reset mutable state.
             unsafe {
-                LAZY = Lazy::INIT;
+                LAZY = LazyV2::INIT;
             }
             CALL_COUNT.store(0, Ordering::SeqCst);
 
