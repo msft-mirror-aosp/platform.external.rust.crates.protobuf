@@ -48,8 +48,6 @@ pub mod descriptor;
 pub mod plugin;
 pub mod rustproto;
 
-mod any;
-
 mod clear;
 pub mod compiler_plugin;
 mod core;
@@ -57,6 +55,7 @@ mod enums;
 pub mod error;
 pub mod ext;
 pub mod lazy;
+mod lazy_v2;
 pub mod reflect;
 mod repeated;
 pub mod rt;
@@ -65,6 +64,7 @@ pub mod stream;
 pub mod text_format;
 pub mod types;
 pub mod well_known_types;
+mod well_known_types_util;
 
 // used by test
 #[cfg(test)]
@@ -75,7 +75,6 @@ mod hex;
 pub mod descriptorx;
 
 mod cached_size;
-#[cfg(feature = "bytes")]
 mod chars;
 #[doc(hidden)] // used by codegen
 pub mod rust;
