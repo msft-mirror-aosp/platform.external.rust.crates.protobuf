@@ -2,10 +2,11 @@
 
 rust_library {
     name: "libprotobuf",
+    // has rustc warnings
     host_supported: true,
     crate_name: "protobuf",
     srcs: ["src/lib.rs"],
-    edition: "2015",
+    edition: "2018",
     features: [
         "bytes",
     ],
