@@ -1,7 +1,8 @@
 //! Reflection implementation for protobuf types.
 
-use core::Message;
+use crate::message::Message;
 
+mod acc;
 pub mod accessor;
 mod enums;
 mod field;
@@ -17,6 +18,8 @@ pub use self::value::ReflectValueRef;
 #[doc(hidden)]
 #[deprecated(since = "2.11", note = "Use ReflectValueRef instead")]
 pub use self::value::ReflectValueRef as ProtobufValueRef;
+
+pub mod rt;
 
 pub use self::enums::EnumDescriptor;
 pub use self::enums::EnumValueDescriptor;

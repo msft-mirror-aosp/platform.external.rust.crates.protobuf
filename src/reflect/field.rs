@@ -1,9 +1,13 @@
-use descriptor::{FieldDescriptorProto, FieldDescriptorProto_Label};
-use reflect::accessor::FieldAccessor;
-use reflect::map::ReflectMap;
-use reflect::repeated::ReflectRepeated;
-use reflect::{EnumValueDescriptor, ReflectValueRef};
-use Message;
+use crate::descriptor::FieldDescriptorProto;
+use crate::descriptor::FieldDescriptorProto_Label;
+use crate::json::json_name;
+use crate::message::Message;
+use crate::reflect::acc::Accessor;
+use crate::reflect::acc::FieldAccessor;
+use crate::reflect::map::ReflectMap;
+use crate::reflect::repeated::ReflectRepeated;
+use crate::reflect::EnumValueDescriptor;
+use crate::reflect::ReflectValueRef;
 
 /// Reference to a value stored in a field, optional, repeated or map.
 // TODO: implement Eq
@@ -11,9 +15,9 @@ pub enum ReflectFieldRef<'a> {
     /// Singular field, optional or required in proto3 and just plain field in proto3
     Optional(Option<ReflectValueRef<'a>>),
     /// Repeated field
-    Repeated(&'a ReflectRepeated),
+    Repeated(&'a dyn ReflectRepeated),
     /// Map field
-    Map(&'a ReflectMap),
+    Map(&'a dyn ReflectMap),
 }
 
 /// Field descriptor.
@@ -21,16 +25,27 @@ pub enum ReflectFieldRef<'a> {
 /// Can be used for runtime reflection.
 pub struct FieldDescriptor {
     proto: &'static FieldDescriptorProto,
-    accessor: Box<FieldAccessor + 'static>,
+    accessor: FieldAccessor,
+    json_name: String,
 }
 
 impl FieldDescriptor {
     pub(crate) fn new(
-        accessor: Box<FieldAccessor + 'static>,
+        accessor: FieldAccessor,
         proto: &'static FieldDescriptorProto,
     ) -> FieldDescriptor {
-        assert_eq!(proto.get_name(), accessor.name_generic());
-        FieldDescriptor { proto, accessor }
+        assert_eq!(proto.get_name(), accessor.name);
+        let json_name = if !proto.get_json_name().is_empty() {
+            proto.get_json_name().to_string()
+        } else {
+            json_name(proto.get_name())
+        };
+        FieldDescriptor {
+            proto,
+            accessor,
+            // probably could be lazy-init
+            json_name,
+        }
     }
 
     /// Get `.proto` description of field
@@ -41,6 +56,17 @@ impl FieldDescriptor {
     /// Field name as specified in `.proto` file
     pub fn name(&self) -> &'static str {
         self.proto.get_name()
+    }
+
+    /// JSON field name.
+    ///
+    /// Can be different from `.proto` field name.
+    ///
+    /// See [JSON mapping][json] for details.
+    ///
+    /// [json]: https://developers.google.com/protocol-buffers/docs/proto3#json
+    pub fn json_name(&self) -> &str {
+        &self.json_name
     }
 
     /// If this field repeated?
@@ -56,19 +82,23 @@ impl FieldDescriptor {
     /// # Panics
     ///
     /// If this field belongs to a different message type.
-    pub fn has_field(&self, m: &Message) -> bool {
-        self.accessor.has_field_generic(m)
+    pub fn has_field(&self, m: &dyn Message) -> bool {
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.has_field_generic(m),
+        }
     }
 
     /// Return length of repeated field.
     ///
-    /// For singualar field return `1` if field is set and `0` otherwise.
+    /// For singular field return `1` if field is set and `0` otherwise.
     ///
     /// # Panics
     ///
     /// If this field belongs to a different message type.
     pub fn len_field(&self, m: &dyn Message) -> usize {
-        self.accessor.len_field_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.len_field_generic(m),
+        }
     }
 
     /// Get message field or default instance if field is unset.
@@ -77,7 +107,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type or
     /// field type is not message.
     pub fn get_message<'a>(&self, m: &'a dyn Message) -> &'a dyn Message {
-        self.accessor.get_message_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_message_generic(m),
+        }
     }
 
     /// Get `enum` field.
@@ -87,7 +119,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `enum`.
     pub fn get_enum(&self, m: &dyn Message) -> &'static EnumValueDescriptor {
-        self.accessor.get_enum_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_enum_generic(m),
+        }
     }
 
     /// Get `string` field.
@@ -97,7 +131,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `string`.
     pub fn get_str<'a>(&self, m: &'a dyn Message) -> &'a str {
-        self.accessor.get_str_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_str_generic(m),
+        }
     }
 
     /// Get `bytes` field.
@@ -107,7 +143,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `bytes`.
     pub fn get_bytes<'a>(&self, m: &'a dyn Message) -> &'a [u8] {
-        self.accessor.get_bytes_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_bytes_generic(m),
+        }
     }
 
     /// Get `u32` field.
@@ -117,7 +155,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `u32`.
     pub fn get_u32(&self, m: &dyn Message) -> u32 {
-        self.accessor.get_u32_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_u32_generic(m),
+        }
     }
 
     /// Get `u64` field.
@@ -127,7 +167,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `u64`.
     pub fn get_u64(&self, m: &dyn Message) -> u64 {
-        self.accessor.get_u64_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_u64_generic(m),
+        }
     }
 
     /// Get `i32` field.
@@ -137,7 +179,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `i32`.
     pub fn get_i32(&self, m: &dyn Message) -> i32 {
-        self.accessor.get_i32_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_i32_generic(m),
+        }
     }
 
     /// Get `i64` field.
@@ -147,7 +191,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `i64`.
     pub fn get_i64(&self, m: &dyn Message) -> i64 {
-        self.accessor.get_i64_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_i64_generic(m),
+        }
     }
 
     /// Get `bool` field.
@@ -157,7 +203,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type or
     /// field type is not singular `bool`.
     pub fn get_bool(&self, m: &dyn Message) -> bool {
-        self.accessor.get_bool_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_bool_generic(m),
+        }
     }
 
     /// Get `float` field.
@@ -167,7 +215,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type or
     /// field type is not singular `float`.
     pub fn get_f32(&self, m: &dyn Message) -> f32 {
-        self.accessor.get_f32_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_f32_generic(m),
+        }
     }
 
     /// Get `double` field.
@@ -177,7 +227,9 @@ impl FieldDescriptor {
     /// If this field belongs to a different message type
     /// or field type is not singular `double`.
     pub fn get_f64(&self, m: &dyn Message) -> f64 {
-        self.accessor.get_f64_generic(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_f64_generic(m),
+        }
     }
 
     /// Get field of any type.
@@ -186,6 +238,8 @@ impl FieldDescriptor {
     ///
     /// If this field belongs to a different message type.
     pub fn get_reflect<'a>(&self, m: &'a dyn Message) -> ReflectFieldRef<'a> {
-        self.accessor.get_reflect(m)
+        match &self.accessor.accessor {
+            Accessor::V1(a) => a.get_reflect(m),
+        }
     }
 }
