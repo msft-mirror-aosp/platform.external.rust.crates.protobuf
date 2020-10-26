@@ -95,4 +95,4 @@ pub const VERSION: &str = "";
 #[cfg(never)]
 #[doc(hidden)]
 pub const VERSION_IDENT: &str = "";
-include!("../out/version.rs");  // ANDROID
+include!(concat!(env!("OUT_DIR"), "/version.rs"));
