@@ -26,37 +26,20 @@ use std;
 use std::fmt;
 use std::fmt::Write;
 
-fn quote_bytes_to(bytes: &[u8], buf: &mut String) {
-    for &c in bytes {
-        match c {
-            b'\n' => buf.push_str(r"\n"),
-            b'\r' => buf.push_str(r"\r"),
-            b'\t' => buf.push_str(r"\t"),
-            b'"' => buf.push_str("\\\""),
-            b'\\' => buf.push_str(r"\\"),
-            b'\x20'..=b'\x7e' => buf.push(c as char),
-            _ => {
-                buf.push('\\');
-                buf.push((b'0' + (c >> 6)) as char);
-                buf.push((b'0' + ((c >> 3) & 7)) as char);
-                buf.push((b'0' + (c & 7)) as char);
-            }
-        }
-    }
-}
+mod print;
 
-fn quote_escape_bytes_to(bytes: &[u8], buf: &mut String) {
-    buf.push('"');
-    quote_bytes_to(bytes, buf);
-    buf.push('"');
-}
-
+// Used by text format parser and by pure-rust codegen parsed
+// this it is public but hidden module.
+// https://github.com/rust-lang/rust/issues/44663
 #[doc(hidden)]
-pub fn quote_escape_bytes(bytes: &[u8]) -> String {
-    let mut r = String::new();
-    quote_escape_bytes_to(bytes, &mut r);
-    r
-}
+pub mod lexer;
+
+use self::print::print_str_to;
+#[doc(hidden)]
+pub use self::print::quote_bytes_to;
+#[doc(hidden)]
+pub use self::print::quote_escape_bytes;
+use crate::text_format::print::quote_escape_bytes_to;
 
 #[doc(hidden)]
 pub fn unescape_string(string: &str) -> Vec<u8> {
@@ -125,11 +108,6 @@ pub fn unescape_string(string: &str) -> Vec<u8> {
             r.push(f as u8); // TODO: escape UTF-8
         }
     }
-}
-
-fn print_str_to(s: &str, buf: &mut String) {
-    // TODO: keep printable Unicode
-    quote_escape_bytes_to(s.as_bytes(), buf);
 }
 
 fn do_indent(buf: &mut String, pretty: bool, indent: usize) {
@@ -219,7 +197,7 @@ fn print_field(
     print_end_field(buf, pretty);
 }
 
-fn print_to_internal(m: &Message, buf: &mut String, pretty: bool, indent: usize) {
+fn print_to_internal(m: &dyn Message, buf: &mut String, pretty: bool, indent: usize) {
     let d = m.descriptor();
     let mut first = true;
     for f in d.fields() {
@@ -266,23 +244,23 @@ fn print_to_internal(m: &Message, buf: &mut String, pretty: bool, indent: usize)
 }
 
 /// Text-format
-pub fn print_to(m: &Message, buf: &mut String) {
+pub fn print_to(m: &dyn Message, buf: &mut String) {
     print_to_internal(m, buf, false, 0)
 }
 
-fn print_to_string_internal(m: &Message, pretty: bool) -> String {
+fn print_to_string_internal(m: &dyn Message, pretty: bool) -> String {
     let mut r = String::new();
     print_to_internal(m, &mut r, pretty, 0);
     r.to_string()
 }
 
 /// Text-format
-pub fn print_to_string(m: &Message) -> String {
+pub fn print_to_string(m: &dyn Message) -> String {
     print_to_string_internal(m, false)
 }
 
 /// Text-format to `fmt::Formatter`.
-pub fn fmt(m: &Message, f: &mut fmt::Formatter) -> fmt::Result {
+pub fn fmt(m: &dyn Message, f: &mut fmt::Formatter) -> fmt::Result {
     let pretty = f.alternate();
     f.write_str(&print_to_string_internal(m, pretty))
 }
@@ -305,7 +283,7 @@ mod test {
     fn test_print_to_bytes() {
         assert_eq!("ab", escape(b"ab"));
         assert_eq!("a\\\\023", escape(b"a\\023"));
-        assert_eq!("a\\r\\n\\t '\\\"\\\\", escape(b"a\r\n\t '\"\\"));
+        assert_eq!("a\\r\\n\\t \\'\\\"\\\\", escape(b"a\r\n\t '\"\\"));
         assert_eq!("\\344\\275\\240\\345\\245\\275", escape("你好".as_bytes()));
     }
 

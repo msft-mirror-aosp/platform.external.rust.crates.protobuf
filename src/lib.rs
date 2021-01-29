@@ -2,8 +2,6 @@
 
 #![deny(missing_docs)]
 #![deny(broken_intra_doc_links)]
-// Because we need compat with Rust 1.26
-#![allow(bare_trait_objects)]
 
 #[cfg(feature = "bytes")]
 extern crate bytes;
@@ -19,9 +17,12 @@ pub use crate::clear::Clear;
 pub use crate::enums::ProtobufEnum;
 pub use crate::error::ProtobufError;
 pub use crate::error::ProtobufResult;
+#[allow(deprecated)]
 pub use crate::message::parse_from_bytes;
 #[cfg(feature = "bytes")]
+#[allow(deprecated)]
 pub use crate::message::parse_from_carllerche_bytes;
+#[allow(deprecated)]
 pub use crate::message::parse_from_reader;
 #[allow(deprecated)]
 pub use crate::message::parse_length_delimited_from;
@@ -95,4 +96,4 @@ pub const VERSION: &str = "";
 #[cfg(never)]
 #[doc(hidden)]
 pub const VERSION_IDENT: &str = "";
-include!("../out/version.rs");  // ANDROID
+include!(concat!(env!("OUT_DIR"), "/version.rs"));
