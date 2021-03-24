@@ -45,4 +45,4 @@ rust_library {
 }
 
 // dependent_library ["feature_list"]
-//   bytes-1.0.0 "default,std"
+//   bytes-1.0.1 "default,std"
