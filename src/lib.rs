@@ -14,6 +14,8 @@ pub use crate::cached_size::CachedSize;
 #[cfg(feature = "bytes")]
 pub use crate::chars::Chars;
 pub use crate::clear::Clear;
+pub use crate::coded_input_stream::CodedInputStream;
+pub use crate::coded_output_stream::CodedOutputStream;
 pub use crate::enums::ProtobufEnum;
 pub use crate::error::ProtobufError;
 pub use crate::error::ProtobufResult;
@@ -34,9 +36,6 @@ pub use crate::message::Message;
 pub use crate::repeated::RepeatedField;
 pub use crate::singular::SingularField;
 pub use crate::singular::SingularPtrField;
-pub use crate::stream::wire_format;
-pub use crate::stream::CodedInputStream;
-pub use crate::stream::CodedOutputStream;
 pub use crate::unknown::UnknownFields;
 pub use crate::unknown::UnknownFieldsIter;
 pub use crate::unknown::UnknownValue;
@@ -49,7 +48,11 @@ pub mod descriptor;
 pub mod plugin;
 pub mod rustproto;
 
+pub mod wire_format;
+
 mod clear;
+mod coded_input_stream;
+mod coded_output_stream;
 pub mod compiler_plugin;
 mod enums;
 pub mod error;
@@ -62,7 +65,6 @@ pub mod reflect;
 mod repeated;
 pub mod rt;
 mod singular;
-pub mod stream;
 pub mod text_format;
 pub mod types;
 pub mod well_known_types;
