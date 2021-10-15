@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "protobuf"
-version = "2.25.0"
+version = "2.25.1"
 authors = ["Stepan Koltsov <stepan.koltsov@gmail.com>"]
 description = "Rust implementation of Google protocol buffers\n"
 homepage = "https://github.com/stepancheg/rust-protobuf/"
