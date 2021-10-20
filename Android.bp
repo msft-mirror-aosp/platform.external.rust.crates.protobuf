@@ -29,6 +29,8 @@ rust_library {
     name: "libprotobuf",
     host_supported: true,
     crate_name: "protobuf",
+    cargo_env_compat: true,
+    cargo_pkg_version: "2.25.1",
     srcs: [
         "src/lib.rs",
         ":copy_protobuf_build_out",
@@ -43,6 +45,3 @@ rust_library {
         "com.android.virt",
     ],
 }
-
-// dependent_library ["feature_list"]
-//   bytes-1.0.1 "default,std"
