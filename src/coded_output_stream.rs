@@ -190,7 +190,7 @@ impl<'a> CodedOutputStream<'a> {
         assert!(self.position == 0);
 
         if self.position + bytes.len() < self.buffer.len() {
-            self.buffer[self.position..self.position + bytes.len()].copy_from_slice(bytes);
+            &mut self.buffer[self.position..self.position + bytes.len()].copy_from_slice(bytes);
             self.position += bytes.len();
             return Ok(());
         }
