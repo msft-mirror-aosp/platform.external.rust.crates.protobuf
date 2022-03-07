@@ -30,7 +30,7 @@ rust_library {
     host_supported: true,
     crate_name: "protobuf",
     cargo_env_compat: true,
-    cargo_pkg_version: "2.25.1",
+    cargo_pkg_version: "2.27.1",
     srcs: [
         "src/lib.rs",
         ":copy_protobuf_build_out",
