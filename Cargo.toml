@@ -12,19 +12,23 @@
 [package]
 edition = "2018"
 name = "protobuf"
-version = "2.25.1"
+version = "2.27.1"
 authors = ["Stepan Koltsov <stepan.koltsov@gmail.com>"]
-description = "Rust implementation of Google protocol buffers\n"
+description = """
+Rust implementation of Google protocol buffers
+"""
 homepage = "https://github.com/stepancheg/rust-protobuf/"
 documentation = "https://github.com/stepancheg/rust-protobuf/blob/master/README.md"
 license = "MIT"
 repository = "https://github.com/stepancheg/rust-protobuf/"
+
 [package.metadata.docs.rs]
 all-features = true
 
 [lib]
 doctest = false
 bench = false
+
 [dependencies.bytes]
 version = "1.0"
 optional = true
@@ -40,4 +44,7 @@ optional = true
 
 [features]
 with-bytes = ["bytes"]
-with-serde = ["serde", "serde_derive"]
+with-serde = [
+    "serde",
+    "serde_derive",
+]
