@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::marker;
-
 use crate::descriptor::DescriptorProto;
 use crate::descriptor::FileDescriptorProto;
 use crate::descriptorx::find_message_by_rust_name;
@@ -9,6 +6,8 @@ use crate::reflect::find_message_or_enum::find_message_or_enum;
 use crate::reflect::find_message_or_enum::MessageOrEnum;
 use crate::reflect::FieldDescriptor;
 use crate::Message;
+use std::collections::HashMap;
+use std::marker;
 
 trait MessageFactory: Send + Sync + 'static {
     fn new_instance(&self) -> Box<dyn Message>;
