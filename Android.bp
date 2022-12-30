@@ -48,3 +48,24 @@ rust_library {
     ],
     min_sdk_version: "29",
 }
+
+rust_library_host {
+    name: "libprotobuf_with_serde",
+    crate_name: "protobuf",
+    cargo_env_compat: true,
+    cargo_pkg_version: "2.27.1",
+    srcs: [
+        "src/lib.rs",
+        ":copy_protobuf_build_out",
+    ],
+    edition: "2018",
+    features: [
+        "serde",
+        "serde_derive",
+        "with-serde",
+    ],
+    rustlibs: [
+        "libserde",
+    ],
+    proc_macros: ["libserde_derive"],
+}
