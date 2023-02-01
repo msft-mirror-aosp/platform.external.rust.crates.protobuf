@@ -1,7 +1,7 @@
 {
   "apex-available": [
     "//apex_available:platform",
-    "com.android.bluetooth",
+    "com.android.btservices",
     "com.android.compos",
     "com.android.virt"
   ],
@@ -9,6 +9,16 @@
   "dependencies": true,
   "device": true,
   "features": "bytes",
+  "variants": [
+    {
+      "suffix": ""
+    },
+    {
+      "suffix": "_with_serde",
+      "features": "with-serde",
+      "device": false
+    }
+  ],
   "min-sdk-version": "29",
   "run": true
 }
