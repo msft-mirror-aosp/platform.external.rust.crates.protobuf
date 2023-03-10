@@ -27,6 +27,7 @@ genrule {
 
 rust_library {
     name: "libprotobuf",
+    // has rustc warnings
     host_supported: true,
     crate_name: "protobuf",
     cargo_env_compat: true,
@@ -46,11 +47,14 @@ rust_library {
         "com.android.compos",
         "com.android.virt",
     ],
+    product_available: true,
+    vendor_available: true,
     min_sdk_version: "29",
 }
 
 rust_library_host {
     name: "libprotobuf_with_serde",
+    // has rustc warnings
     crate_name: "protobuf",
     cargo_env_compat: true,
     cargo_pkg_version: "2.27.1",
@@ -68,4 +72,6 @@ rust_library_host {
         "libserde",
     ],
     proc_macros: ["libserde_derive"],
+    product_available: true,
+    vendor_available: true,
 }
