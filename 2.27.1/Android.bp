@@ -2,13 +2,15 @@
 // Do not modify this file as changes will be overridden on upgrade.
 
 package {
-    default_applicable_licenses: ["external_rust_crates_protobuf_license"],
+    default_applicable_licenses: [
+        "external_rust_crates_protobuf_2.27.1_license",
+    ],
 }
 
 // Added automatically by a large-scale-change
 // See: http://go/android-license-faq
 license {
-    name: "external_rust_crates_protobuf_license",
+    name: "external_rust_crates_protobuf_2.27.1_license",
     visibility: [":__subpackages__"],
     license_kinds: [
         "SPDX-license-identifier-MIT",
@@ -19,14 +21,14 @@ license {
 }
 
 genrule {
-    name: "copy_protobuf_build_out",
+    name: "copy_protobuf_deprecated_build_out",
     srcs: ["out/*"],
     cmd: "cp $(in) $(genDir)",
     out: ["version.rs"],
 }
 
 rust_library {
-    name: "libprotobuf",
+    name: "libprotobuf_deprecated",
     // has rustc warnings
     host_supported: true,
     crate_name: "protobuf",
@@ -34,7 +36,7 @@ rust_library {
     cargo_pkg_version: "2.27.1",
     srcs: [
         "src/lib.rs",
-        ":copy_protobuf_build_out",
+        ":copy_protobuf_deprecated_build_out",
     ],
     edition: "2018",
     features: ["bytes"],
@@ -50,28 +52,4 @@ rust_library {
     product_available: true,
     vendor_available: true,
     min_sdk_version: "29",
-}
-
-rust_library_host {
-    name: "libprotobuf_with_serde",
-    // has rustc warnings
-    crate_name: "protobuf",
-    cargo_env_compat: true,
-    cargo_pkg_version: "2.27.1",
-    srcs: [
-        "src/lib.rs",
-        ":copy_protobuf_build_out",
-    ],
-    edition: "2018",
-    features: [
-        "serde",
-        "serde_derive",
-        "with-serde",
-    ],
-    rustlibs: [
-        "libserde",
-    ],
-    proc_macros: ["libserde_derive"],
-    product_available: true,
-    vendor_available: true,
 }
