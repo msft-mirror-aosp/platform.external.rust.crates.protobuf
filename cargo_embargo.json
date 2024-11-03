@@ -7,5 +7,15 @@
     "protobuf": {
       "copy_out": true
     }
-  }
+  },
+  "variants": [
+    {},
+    {
+      "features": [
+        "default"
+      ],
+      "generate_rulesmk": true,
+      "generate_androidbp": false
+    }
+  ]
 }
